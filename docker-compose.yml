@@ -6,21 +6,22 @@ services:
     environment:
       POSTGRES_USER: lestra_user
       POSTGRES_PASSWORD: lestra_pass
-      POSTGRES_DB: lestr_analytics_db
-      ports:
-        - "5432:5432"
-      grafana:
-        image: grafana/grafana
-        restart: always
-        ports:
-          - 3000:3000
-        depends_on:
-          - db
-        environment:
-          GF_SECURITY_ADMIN_USER: admin
-          GF_SECURITY_ADMIN_PASSWORD: admin
-          GF_DATABASE_TYPE: postgres
-          GF_DATABASE_HOST: db
-          GF_DATABASE_USER: lestra_user
-          GF_DATABASE_PASSWORD: lestra_pass
-          GF_DATABASE_NAME: lestr_analytics_db
+      POSTGRES_DB: lestra_analytics_db
+    ports:
+      - "5432:5432"
+
+  grafana:
+    image: grafana/grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_DATABASE_TYPE: postgres
+      GF_DATABASE_HOST: db
+      GF_DATABASE_USER: lestra_user
+      GF_DATABASE_PASSWORD: lestra_pass
+      GF_DATABASE_NAME: lestra_analytics_db
