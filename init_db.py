@@ -41,8 +41,8 @@ def init_ships_db():
 
 
 def init_purchases_db():
-    dataset_file = 'data/Dataset-ships.db'
-    lst_tables = ['arenas', 'arena_members', 'glossary_ships', 'catalog_items']
+    dataset_file = 'data/Dataset-purchases.db'
+    lst_tables = ['packs_purchases']
 
     for tn in lst_tables:
         init_db(dataset_file, tn)
@@ -95,8 +95,37 @@ def daily_granulation():
     pg_conn.close()
 
 
-def task2():
-    pass
+def packs_purchase_pattern():
+    logger.debug(f'Connect to sqlite3')
+    conn = sqlite3.connect('data/Dataset-purchases.db')
+
+    query_pattern = '''SELECT
+        pattern,
+        COUNT(DISTINCT purchaser_id) AS user_count
+    FROM (
+        SELECT
+            p1.purchaser_id,
+            GROUP_CONCAT(p2.purchase, ' - ') AS pattern
+        FROM packs_purchases p1
+        LEFT JOIN packs_purchases p2 ON p1.purchaser_id = p2.purchaser_id AND p2.purchase_dt >= p1.purchase_dt
+        GROUP BY p1.purchaser_id, p1.purchase_dt
+    ) patterns
+    GROUP BY pattern
+    ORDER BY user_count DESC;
+    '''
+
+    df_pattern = pd.read_sql_query(query_pattern, conn)
+    conn.close()
+
+    logger.debug(f'Init packs purchase pattern table')
+
+    pg_conn = engine.connect()
+
+    df_pattern.to_sql('packs_purchase_pattern', pg_conn,
+                         if_exists='append', index=False,
+                         chunksize=1000, method='multi')
+
+    pg_conn.close()
 
 
 if __name__ == '__main__':
@@ -105,4 +134,5 @@ if __name__ == '__main__':
     daily_granulation()
 
     # task 2
-    # init_purchases_db()
+    init_purchases_db()
+    packs_purchase_pattern()
